@@ -11,13 +11,28 @@ llm = HuggingFaceEndpoint(model='openai/gpt-oss-20b',task='coversational',temper
 model = ChatHuggingFace(llm=llm)
 
 st.header("May i Help you !!")
-chat_history=[
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history=[
     SystemMessage(content='You are helpful assistant')
 ]
-input=st.text_input("whats on your mind today")
-chat_history.append(HumanMessage(content=input))
+    
+    for msg in st.session_state.chat_history:
+        if isinstance(msg,HumanMessage):
+            with st.chat_message("user"):
+                st.write(msg.content)
+        elif isinstance(msg,AIMessage):
+            with st.chat_message("assistant"):
+                st.write(msg.content)
 
-if st.button("-Send-"):
-    result=model.invoke(chat_history)
-    chat_history.append(AIMessage(content=result.content))
-    st.write(result.content)
+
+if user_input := st.chat_input("Whats on your mind today..."):
+    with st.chat_message("user"):
+        st.write(user_input)
+    st.session_state.chat_history.append(HumanMessage(content=user_input))
+
+    with st.chat_message("assistant"):
+        result=model.invoke(st.session_state.chat_history)
+        st.write(result.content)
+
+    st.session_state.chat_history.append(AIMessage(content=result.content))
